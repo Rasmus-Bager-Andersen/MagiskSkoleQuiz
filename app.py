@@ -1,6 +1,11 @@
 import random
 import os
 from flask import Flask, render_template, request, redirect, url_for, session
+import redis
+
+# Opret forbindelse til Upstash Redis
+redis_url = os.environ.get("REDIS_URL")
+r = redis.Redis.from_url(redis_url, decode_responses=True, ssl=True)
 
 app = Flask(__name__)
 app.secret_key = "hemmelig_nøgle"
@@ -13,7 +18,7 @@ questions = [
             {"text": "Forandringer er uundgåelige men jeg passer på og bevarer de gamle traditioner", "house": "Yggdrasil"},
             {"text": "Jeg er nysgerrig og søger at opfinde og skabe ting der kan forbedre det nuværende hvis muligt", "house": "Freke"},
             {"text": "Jeg er interesseret i det ukendte og søger gerne svar der hvor andre ikke tør træde", "house": "Rimfaxe"},
-            {"text": "Forandringer nødvendig for forbedring og jeg kæmper gerne for det", "house": "Fimbul"}
+            {"text": "Forandring er nødvendig for forbedring og jeg kæmper gerne for det", "house": "Fimbul"}
         ]
     },
     {
@@ -113,6 +118,8 @@ heavy_questions = [2]  # lige nu kun spørgsmål 3
 # Flask-ruter
 @app.route("/")
 def index():
+    # Opdater besøgstæller i Redis
+    visits = r.incr("visits") # Tæller op med 1 hver gang nogen besøger siden
     # Nulstil session og start quiz
     session["current_q"] = 0
     session["scores"] = {h: 0 for h in houses_info.keys()}
@@ -184,6 +191,9 @@ def result():
     # Hvis der stadig er lighed, vælg tilfældigt
     house = random.choice(top_houses) if len(top_houses) > 1 else top_houses[0]
 
+    # Gem resultatet i Redis
+    r.incr(f"result:{house}")
+
     info = houses_info[house]
     return render_template(
         "result.html",
@@ -191,6 +201,56 @@ def result():
         logo=info["logo"],
         description=info["description"]
     )
+
+@app.route("/admin")
+def admin_dashboard():
+    visits = int(r.get("visits") or 0)
+    results = {house: int(r.get(f"result:{house}") or 0) for house in ["Yggdrasil", "Freke", "Rimfaxe", "Fimbul"]}
+
+    html = f"""
+    <html>
+    <head>
+        <title>Admin Dashboard</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 40px; background-color: #f9f9f9; }}
+            h1 {{ color: #333; }}
+            table {{
+                border-collapse: collapse;
+                width: 50%;
+                margin-top: 20px;
+            }}
+            th, td {{
+                border: 1px solid #ccc;
+                padding: 10px;
+                text-align: left;
+            }}
+            th {{
+                background-color: #eee;
+            }}
+            tr:nth-child(even) {{
+                background-color: #f2f2f2;
+            }}
+        </style>
+    </head>
+    <body>
+        <h1>Admin Dashboard</h1>
+        <p><strong>Antal besøg:</strong> {visits}</p>
+        <h2>Resultater</h2>
+        <table>
+            <tr><th>Hus</th><th>Antal</th></tr>
+    """
+    for house, count in results.items():
+        html += f"<tr><td>{house}</td><td>{count}</td></tr>"
+
+    html += """
+        </table>
+    </body>
+    </html>
+    """
+    return html
+
+
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
