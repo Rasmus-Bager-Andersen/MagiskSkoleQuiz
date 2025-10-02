@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Spørgsmål {{ q_number }} af {{ total }}</h3>
+<form method="post">
+    <p><b>{{ question.question }}</b></p>
+    {% for opt in question.options %}
+        <label>
+            <input type="radio" name="option" value="{{ opt.text }}" required>
+            {{ opt.text }}
+        </label><br>
+    {% endfor %}
+    <br>
+    <button type="submit">Næste</button>
+</form>
+{% endblock %}

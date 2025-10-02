@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="text-align:center; margin-top:50px;">
+    <h1>Du er blevet fordelt til hus: {{ house|capitalize }}</h1>
+    <img src="{{ url_for('static', filename=logo) }}" alt="{{ house }} logo" style="width:200px; height:auto; margin:20px 0;">
+    <p>{{ description }}</p>
+    <a href="{{ url_for('index') }}">
+        <button>Tag quizzen igen</button>
+    </a>
+</div>
+{% endblock %}
