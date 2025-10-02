@@ -5,7 +5,8 @@ import redis
 
 # Opret forbindelse til Upstash Redis
 redis_url = os.environ.get("REDIS_URL")
-r = redis.Redis.from_url(redis_url, decode_responses=True, ssl=True)
+r = redis.Redis.from_url(redis_url, decode_responses=True)
+
 
 app = Flask(__name__)
 app.secret_key = "hemmelig_nøgle"
