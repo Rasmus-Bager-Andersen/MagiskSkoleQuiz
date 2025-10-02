@@ -30,7 +30,7 @@ questions = [
         "options": [
             {"text": "Opsøgende, Vis og Jordnær", "house": "Yggdrasil"},
             {"text": "Nysgerrig, Videnbegærlig og Legende", "house": "Freke"},
-            {"text": "Mystisk ", "house": "Rimfaxe"},
+            {"text": "Mystisk, Drømmende og Hemmelig", "house": "Rimfaxe"},
             {"text": "Kaotisk, Stædig og Målrettet", "house": "Fimbul"}
         ]
     },
